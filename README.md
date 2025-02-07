@@ -963,5 +963,322 @@ def metrics_ElasticNet():
 
 metrics_ElasticNet()
 
+Unsupervised learning 
+
+
+import os
+os.environ['OMP_NUM_THREADS'] = '1'
+
+from sklearn.cluster import KMeans
+
+# Set n_init explicitly to suppress the FutureWarning
+kmeans = KMeans(n_clusters=3, n_init=10)
+kmeans.fit(X)  # Replace X with your data
+### to find the best k value by elbow method:
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+import pandas as pd
+
+# Import your dataset (replace 'your_dataset.csv' with the path to your file)
+df = pd.read_csv('wine-clustering.csv')
+
+# Assuming you want to use specific features for clustering
+# Replace 'Feature1', 'Feature2' with actual column names from your dataset
+X = df[['Alcohol', 'Malic_Acid', 'Color_Intensity']].values
+
+# List to store inertia values for each k
+inertia = []
+
+# Try k values from 1 to 10
+for k in range(1, 11):
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(X)
+    inertia.append(kmeans.inertia_)
+
+from yellowbrick.cluster import KElbowVisualizer
+
+model = KMeans(random_state=1)
+visualizer = KElbowVisualizer(model, k=(2,10))
+
+visualizer.fit(X)
+visualizer.show()
+plt.show()
+
+from sklearn.metrics import silhouette_score
+
+# List to store silhouette scores for each k
+silhouette_scores = []
+
+# Try k values from 2 to 10 (Silhouette Score is undefined for k=1)
+for k in range(2, 11):
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    labels = kmeans.fit_predict(X)
+    silhouette_scores.append(silhouette_score(X, labels))
+
+model = KMeans(random_state=1)
+visualizer = KElbowVisualizer(model, k=(2,10), metric='silhouette')
+
+visualizer.fit(X)
+visualizer.show()
+plt.show()
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
+from sklearn.mixture import GaussianMixture
+from sklearn.preprocessing import StandardScaler
+from scipy.cluster.hierarchy import dendrogram, linkage
+from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
+
+# Import your dataset (replace 'your_dataset.csv' with the path to your file)
+df = pd.read_csv('wine-clustering.csv')
+
+# Assuming you want to use specific features for clustering
+X = df[['Alcohol', 'Malic_Acid', 'Color_Intensity']].values
+
+# Standardize the data
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# KMeans Clustering
+kmeans = KMeans(n_clusters=3, n_init=10)
+kmeans_labels = kmeans.fit_predict(X_scaled)
+centroids = kmeans.cluster_centers_
+
+# DBSCAN Clustering
+dbscan = DBSCAN(eps=0.5, min_samples=5)
+dbscan_labels = dbscan.fit_predict(X_scaled)
+
+# Agglomerative Clustering
+agglo = AgglomerativeClustering(n_clusters=3)
+agglo_labels = agglo.fit_predict(X_scaled)
+
+# Gaussian Mixture Model
+gmm = GaussianMixture(n_components=3, random_state=0)
+gmm_labels = gmm.fit_predict(X_scaled)
+
+# Calculate Clustering Metrics
+metrics = {
+    "Clustering Algorithm": ["KMeans", "DBSCAN", "Agglomerative", "GMM"],
+    "Silhouette Score": [
+        silhouette_score(X_scaled, kmeans_labels),
+        silhouette_score(X_scaled, dbscan_labels),
+        silhouette_score(X_scaled, agglo_labels),
+        silhouette_score(X_scaled, gmm_labels)
+    ],
+    "Calinski-Harabasz Index": [
+        calinski_harabasz_score(X_scaled, kmeans_labels),
+        calinski_harabasz_score(X_scaled, dbscan_labels),
+        calinski_harabasz_score(X_scaled, agglo_labels),
+        calinski_harabasz_score(X_scaled, gmm_labels)
+    ],
+    "Davies-Bouldin Index": [
+        davies_bouldin_score(X_scaled, kmeans_labels),
+        davies_bouldin_score(X_scaled, dbscan_labels),
+        davies_bouldin_score(X_scaled, agglo_labels),
+        davies_bouldin_score(X_scaled, gmm_labels)
+    ]
+}
+
+# Display Clustering Metrics
+metrics_df = pd.DataFrame(metrics).set_index("Clustering Algorithm").round(3)
+print(metrics_df)
+
+# Visualization of KMeans Clustering with Centroids
+plt.figure(figsize=(12, 8))
+plt.subplot(2, 2, 1)
+plt.scatter(X_scaled[:, 0], X_scaled[:, 1], c=kmeans_labels, cmap='viridis', label='Clusters')
+plt.scatter(centroids[:, 0], centroids[:, 1], c='red', marker='X', s=200, label='Centroids')
+plt.title('KMeans Clustering with Centroids')
+plt.legend()
+
+# Visualization of DBSCAN Clustering
+plt.subplot(2, 2, 2)
+plt.scatter(X_scaled[:, 0], X_scaled[:, 1], c=dbscan_labels, cmap='viridis')
+plt.title('DBSCAN Clustering')
+
+# Visualization of Agglomerative Clustering
+plt.subplot(2, 2, 3)
+plt.scatter(X_scaled[:, 0], X_scaled[:, 1], c=agglo_labels, cmap='viridis')
+plt.title('Agglomerative Clustering')
+
+# Visualization of GMM Clustering
+plt.subplot(2, 2, 4)
+plt.scatter(X_scaled[:, 0], X_scaled[:, 1], c=gmm_labels, cmap='viridis')
+plt.title('Gaussian Mixture Model Clustering')
+
+plt.tight_layout()
+plt.show()
+
+# Create a Dendrogram for Agglomerative Clustering
+plt.figure(figsize=(10, 7))
+Z = linkage(X_scaled, method='ward')
+dendrogram(Z, color_threshold=0.7 * np.max(Z[:, 2]), above_threshold_color='gray')
+plt.title('Dendrogram for Hierarchical Clustering')
+plt.xlabel('Sample Index or Cluster Size')
+plt.ylabel('Distance (Ward\'s linkage)')
+plt.tight_layout()
+plt.show()
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
+from sklearn.mixture import GaussianMixture
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
+from sklearn.model_selection import GridSearchCV
+from scipy.cluster.hierarchy import dendrogram, linkage
+
+# Import your dataset
+df = pd.read_csv('wine-clustering.csv')
+
+# Assuming you want to use specific features for clustering
+X = df[['Alcohol', 'Malic_Acid', 'Color_Intensity']].values
+
+# Standardize the data
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# KMeans Hyperparameter Tuning
+kmeans_params = {'n_clusters': [2, 3, 4, 5], 'n_init': [10, 20, 30]}
+kmeans = KMeans()
+kmeans_grid = GridSearchCV(kmeans, kmeans_params, cv=3)
+kmeans_grid.fit(X_scaled)
+best_kmeans = kmeans_grid.best_estimator_
+kmeans_labels = best_kmeans.predict(X_scaled)
+centroids = best_kmeans.cluster_centers_
+
+# Define a custom scoring function using silhouette score
+def silhouette_scorer(estimator, X):
+    # Get the labels from the DBSCAN model
+    labels = estimator.fit_predict(X)
+    # Only compute silhouette score if there are more than 1 cluster
+    if len(set(labels)) > 1:
+        return silhouette_score(X, labels)
+    else:
+        return -1  # Return a low score if only 1 cluster
+
+# Define your parameter grid for DBSCAN
+dbscan_params = {
+    'eps': [0.3, 0.5, 0.7],  # example values
+    'min_samples': [3, 5, 7]
+}
+
+# Standardize the data
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Define DBSCAN model
+dbscan = DBSCAN()
+
+# Create GridSearchCV object with the custom scoring function
+dbscan_grid = GridSearchCV(dbscan, dbscan_params, cv=3, scoring=make_scorer(silhouette_scorer))
+
+# Fit the model
+dbscan_grid.fit(X_scaled)
+
+# Get the best estimator and labels
+best_dbscan = dbscan_grid.best_estimator_
+dbscan_labels = best_dbscan.fit_predict(X_scaled)
+
+print("Best parameters found: ", dbscan_grid.best_params_)
+
+# Agglomerative Clustering (no hyperparameter tuning through GridSearchCV for linkage methods)
+agglo = AgglomerativeClustering(n_clusters=3)
+agglo_labels = agglo.fit_predict(X_scaled)
+
+# Gaussian Mixture Model Hyperparameter Tuning
+gmm_params = {'n_components': [2, 3, 4], 'covariance_type': ['full', 'tied', 'diag']}
+gmm = GaussianMixture(random_state=0)
+gmm_grid = GridSearchCV(gmm, gmm_params, cv=3)
+gmm_grid.fit(X_scaled)
+best_gmm = gmm_grid.best_estimator_
+gmm_labels = best_gmm.predict(X_scaled)
+
+# Calculate Clustering Metrics
+metrics = {
+    "Clustering Algorithm": ["KMeans (Tuned)", "DBSCAN (Tuned)", "Agglomerative", "GMM (Tuned)"],
+    "Silhouette Score": [
+        silhouette_score(X_scaled, kmeans_labels),
+        silhouette_score(X_scaled, dbscan_labels),
+        silhouette_score(X_scaled, agglo_labels),
+        silhouette_score(X_scaled, gmm_labels)
+    ],
+    "Calinski-Harabasz Index": [
+        calinski_harabasz_score(X_scaled, kmeans_labels),
+        calinski_harabasz_score(X_scaled, dbscan_labels),
+        calinski_harabasz_score(X_scaled, agglo_labels),
+        calinski_harabasz_score(X_scaled, gmm_labels)
+    ],
+    "Davies-Bouldin Index": [
+        davies_bouldin_score(X_scaled, kmeans_labels),
+        davies_bouldin_score(X_scaled, dbscan_labels),
+        davies_bouldin_score(X_scaled, agglo_labels),
+        davies_bouldin_score(X_scaled, gmm_labels)
+    ]
+}
+
+# Display Clustering Metrics
+metrics_df = pd.DataFrame(metrics).set_index("Clustering Algorithm").round(3)
+print(metrics_df)
+
+# Visualization of Tuned KMeans Clustering with Centroids
+plt.figure(figsize=(12, 8))
+plt.subplot(2, 2, 1)
+plt.scatter(X_scaled[:, 0], X_scaled[:, 1], c=kmeans_labels, cmap='viridis', label='Clusters')
+plt.scatter(centroids[:, 0], centroids[:, 1], c='red', marker='X', s=200, label='Centroids')
+plt.title(f'KMeans Clustering (Tuned: n_clusters={best_kmeans.n_clusters})')
+plt.legend()
+
+# Visualization of Tuned DBSCAN Clustering
+plt.subplot(2, 2, 2)
+plt.scatter(X_scaled[:, 0], X_scaled[:, 1], c=dbscan_labels, cmap='viridis')
+plt.title(f'DBSCAN Clustering (Tuned: eps={best_dbscan.eps}, min_samples={best_dbscan.min_samples})')
+
+# Visualization of Agglomerative Clustering
+plt.subplot(2, 2, 3)
+plt.scatter(X_scaled[:, 0], X_scaled[:, 1], c=agglo_labels, cmap='viridis')
+plt.title('Agglomerative Clustering')
+
+# Visualization of Tuned GMM Clustering
+plt.subplot(2, 2, 4)
+plt.scatter(X_scaled[:, 0], X_scaled[:, 1], c=gmm_labels, cmap='viridis')
+plt.title(f'Gaussian Mixture Model (Tuned: n_components={best_gmm.n_components})')
+
+plt.tight_layout()
+plt.show()
+
+# Create a Dendrogram for Agglomerative Clustering
+plt.figure(figsize=(10, 7))
+Z = linkage(X_scaled, method='ward')
+dendrogram(Z, color_threshold=0.7 * np.max(Z[:, 2]), above_threshold_color='gray')
+plt.title('Dendrogram for Hierarchical Clustering')
+plt.xlabel('Sample Index or Cluster Size')
+plt.ylabel('Distance (Ward\'s linkage)')
+plt.tight_layout()
+plt.show()
+
+from sklearn.cluster import AgglomerativeClustering, KMeans
+from sklearn.metrics import silhouette_score
+
+# For K-Means
+kmeans = KMeans(n_clusters=3, random_state=42)
+labels_kmeans = kmeans.fit_predict(X_scaled)
+silhouette_kmeans = silhouette_score(X_scaled, labels_kmeans)
+print(f'Silhouette Score for K-Means: {silhouette_kmeans}')
+
+# For DBSCAN
+dbscan = DBSCAN(eps=0.5, min_samples=5)
+labels_dbscan = dbscan.fit_predict(X_scaled)
+silhouette_dbscan = silhouette_score(X_scaled, labels_dbscan) if len(set(labels_dbscan)) > 1 else -1
+print(f'Silhouette Score for DBSCAN: {silhouette_dbscan}')
+
+# For Hierarchical Clustering
+hierarchical = AgglomerativeClustering(n_clusters=3)
+labels_hierarchical = hierarchical.fit_predict(X_scaled)
+silhouette_hierarchical = silhouette_score(X_scaled, labels_hierarchical)
+print(f'Silhouette Score for Hierarchical Clustering: {silhouette_hierarchical}')
 
 
